@@ -50,6 +50,7 @@ class Atoms
   std::vector<Vector> positions;
   std::vector<Vector> forces;
   std::vector<double> masses;
+  std::vector<double> energiesAtom;
   std::vector<double> charges;
   std::vector<ActionWithVirtualAtom*> virtualAtomsActions;
   Tensor box;
@@ -65,6 +66,7 @@ class Atoms
   bool   energyHasBeenSet;
   unsigned positionsHaveBeenSet;
   bool massesHaveBeenSet;
+  bool energiesAtomHaveBeenSet;
   bool chargesHaveBeenSet;
   bool boxHasBeenSet;
   unsigned forcesHaveBeenSet;
@@ -180,6 +182,7 @@ public:
   void setForces(void*);
   void setForces(void*,int);
   void setMasses(void*);
+  void setEnergiesAtom(void*);
   void setCharges(void*);
   bool chargesWereSet() const ;
   bool boxWasSet() const ;

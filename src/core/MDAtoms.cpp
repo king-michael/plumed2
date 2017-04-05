@@ -40,9 +40,11 @@ public MDAtomsBase
   T scalep,scalef;
   T scaleb,scalev;
   T scalec,scalem; // factor to scale charges and masses
+  T scaleenergiesatom;
   int stride;
   T *m;
   T *c;
+  T *energiesatom;
   T *px; T *py; T *pz;
   T *fx; T *fy; T *fz;
   T *box;
@@ -51,6 +53,7 @@ public:
   MDAtomsTyped();
   void setm(void*m);
   void setc(void*m);
+  void setenergiesatom(void*m);
   void setBox(void*);
   void setp(void*p);
   void setVirial(void*);
@@ -73,6 +76,7 @@ public:
   void getPositions(unsigned j,unsigned k,vector<Vector>&positions)const;
   void getLocalPositions(std::vector<Vector>&p)const;
   void getMasses(const vector<int>&index,vector<double>&)const;
+  void getEnergiesAtom(const vector<int>&index,vector<double>&)const;
   void getCharges(const vector<int>&index,vector<double>&)const;
   void updateVirial(const Tensor&)const;
   void updateForces(const vector<int>&index,const vector<Vector>&);
@@ -94,6 +98,7 @@ void MDAtomsTyped<T>::setUnits(const Units& units,const Units& MDUnits){
   scalev=escale;
   scalec=1.0/cscale;
   scalem=1.0/mscale;
+  scaleenergiesatom=escale;
 }
 
 template <class T>
@@ -139,6 +144,13 @@ void MDAtomsTyped<T>::getMasses(const vector<int>&index,vector<double>&masses)co
   if(m) for(unsigned i=0;i<index.size();++i) masses[index[i]]=scalem*m[i];
   else  for(unsigned i=0;i<index.size();++i) masses[index[i]]=0.0;
 }
+
+template <class T>
+void MDAtomsTyped<T>::getEnergiesAtom(const vector<int>&index,vector<double>&energiesAtom)const{
+  if(energiesatom) for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=scaleenergiesatom*energiesatom[i];
+  else  for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=0.0;
+}
+
 
 template <class T>
 void MDAtomsTyped<T>::getCharges(const vector<int>&index,vector<double>&charges)const{
@@ -240,6 +252,11 @@ void MDAtomsTyped<T>::setc(void*c){
 }
 
 template <class T>
+void MDAtomsTyped<T>::setenergiesatom(void*energiesatom){
+  this->energiesatom=static_cast<T*>(energiesatom);
+}
+
+template <class T>
 MDAtomsTyped<T>::MDAtomsTyped():
   scalep(1.0),
   scalef(1.0),
@@ -247,6 +264,7 @@ MDAtomsTyped<T>::MDAtomsTyped():
   scalev(1.0),
   scalec(1.0),
   scalem(1.0),
+  scaleenergiesatom(1.0),
   stride(0),
   m(NULL),
   c(NULL),
