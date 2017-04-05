@@ -35,29 +35,6 @@ namespace multicolvar{
 
 //+PLUMEDOC MCOLVAR PAIRENTROPY
 /*
-Calculate the coordination numbers of atoms so that you can then calculate functions of the distribution of
-coordination numbers such as the minimum, the number less than a certain quantity and so on.   
-
-To make the calculation of coordination numbers differentiable the following function is used:
-
-\f[
-s = \frac{ 1 - \left(\frac{r-d_0}{r_0}\right)^n } { 1 - \left(\frac{r-d_0}{r_0}\right)^m }
-\f]
-
-\par Examples
-
-The following input tells plumed to calculate the coordination numbers of atoms 1-100 with themselves.
-The minimum coordination number is then calculated.
-\verbatim
-PAIRENTROPY SPECIES=1-100 R_0=1.0 MIN={BETA=0.1}
-\endverbatim
-
-The following input tells plumed to calculate how many atoms from 1-100 are within 3.0 of each of the atoms
-from 101-110.  In the first 101 is the central atom, in the second 102 is the central atom and so on.  The 
-number of coordination numbers more than 6 is then computed.
-\verbatim
-PAIRENTROPY SPECIESA=101-110 SPECIESB=1-100 R_0=3.0 MORE_THAN={RATIONAL R_0=6.0 NN=6 MM=12 D_0=0}
-\endverbatim
 
 */
 //+ENDPLUMEDOC
@@ -65,7 +42,6 @@ PAIRENTROPY SPECIESA=101-110 SPECIESB=1-100 R_0=3.0 MORE_THAN={RATIONAL R_0=6.0 
 
 class PairEntropy : public MultiColvarBase {
 private:
-//  double nl_cut;
   double rcut2;
   double invSqrt2piSigma, sigmaSqr2;
   double maxr, nhist,sigma;
@@ -76,7 +52,9 @@ public:
   explicit PairEntropy(const ActionOptions&);
 // active methods:
   virtual double compute( const unsigned& tindex, AtomValuePack& myatoms ) const ; 
+  // Kernel to calculate g(r)
   virtual double kernel(double distance, double&dfunc)const;
+  // Integration routine
   virtual double integrate(vector<double> integrand, double delta)const;
 /// Returns the number of coordinates of the field
   bool isPeriodic(){ return false; }
