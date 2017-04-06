@@ -135,10 +135,14 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
    for(unsigned i=0;i<gofr.size();++i){
      double x=deltar*(i+0.5);
      if (gofr[i]<1.e-10) {
+       //integrand[i] = 0.;
        integrand[i] = x*x;
      } else {
+       //integrand[i] = (gofr[i])*x*x;
+       //integrand[i] = (gofr[i]*std::log(gofr[i]))*x*x;
        integrand[i] = (gofr[i]*std::log(gofr[i])-gofr[i]+1)*x*x;
      }
+     //log.printf("x integrand %f %f \n ", x, integrand[i]);
    }
    // Integrate to obtain pair entropy;
    double entropy = -2*pi*density*integrate(integrand,deltar); 
