@@ -147,7 +147,7 @@ void MDAtomsTyped<T>::getMasses(const vector<int>&index,vector<double>&masses)co
 
 template <class T>
 void MDAtomsTyped<T>::getEnergiesAtom(const vector<int>&index,vector<double>&energiesAtom)const{
-  if(energiesatom) for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=scaleenergiesatom*energiesatom[i];
+  if(energiesatom) for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=energiesatom[i]/scaleenergiesatom;
   else  for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=0.0;
 }
 

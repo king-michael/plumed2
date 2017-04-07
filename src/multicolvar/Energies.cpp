@@ -67,6 +67,7 @@ Action(ao),
 MultiColvarBase(ao)
 {
   // And setup the ActionWithVessel
+  setLinkCellCutoff( 0.5 );
   std::vector<AtomNumber> all_atoms; setupMultiColvarBase( all_atoms ); checkRead();
 }
 
