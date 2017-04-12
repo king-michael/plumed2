@@ -35,6 +35,34 @@ namespace multicolvar{
 
 //+PLUMEDOC MCOLVAR PAIRENTROPY
 /*
+Calculate the pair entropy of atom i using the function:
+
+\f[
+s_i=-2\pi\rho k_B \int\limits_0^{r_{\mathrm{max}}} \left [ g(r) \ln g(r) - g(r) + 1 \right ] r^2 dr .
+\f]
+
+where \f$ g(r) $\f is the pair distribution function and \f$ r_{\mathrm{max}} $\f is a cutoff in the integration (MAXR).
+For the integration the interval from 0 to  \f$ r_{\mathrm{max}} $\f is partitioned in NHIST equal intervals. 
+To make the calculation of \f$ g(r) $\f differentiable, the following function is used:
+\f[
+g(r) = \frac{1}{4 \pi \rho r^2} \sum\limits_{j} \frac{1}{\sqrt{2 \pi \sigma^2}} e^{-(r-r_{ij})^2/(2\sigma^2)} ,
+\f]
+where \f$ \rho $\f is the density and \f$ sigma $\f is a broadening parameter (SIGMA).  
+
+\par Example)
+
+The following input tells plumed to calculate the per atom per entropy of atoms 1-250 with themselves.
+The mean pair entropy is the calculated.
+\verbatim
+PAIRENTROPY ...
+ LABEL=s2
+ SPECIES=1-250
+ MAXR=0.65
+ SIGMA=0.025
+ NHIST=60
+ MEAN
+... PAIRENTROPY
+\endverbatim
 
 */
 //+ENDPLUMEDOC
@@ -43,19 +71,21 @@ namespace multicolvar{
 class PairEntropy : public MultiColvarBase {
 private:
   double rcut2;
-  double invSqrt2piSigma, sigmaSqr2;
+  double invSqrt2piSigma, sigmaSqr2, sigmaSqr;
   double maxr, nhist,sigma;
   double deltar;
   unsigned deltaBin;
+  // Integration routine
+  double integrate(vector<double> integrand, double delta)const;
+  Vector integrate(vector<Vector> integrand, double delta)const;
+  Tensor integrate(vector<Tensor> integrand, double delta)const;
+  // Kernel to calculate g(r)
+  double kernel(double distance, double&der)const;
 public:
   static void registerKeywords( Keywords& keys );
   explicit PairEntropy(const ActionOptions&);
 // active methods:
   virtual double compute( const unsigned& tindex, AtomValuePack& myatoms ) const ; 
-  // Kernel to calculate g(r)
-  virtual double kernel(double distance, double&dfunc)const;
-  // Integration routine
-  virtual double integrate(vector<double> integrand, double delta)const;
 /// Returns the number of coordinates of the field
   bool isPeriodic(){ return false; }
 };
@@ -79,8 +109,11 @@ Action(ao),
 MultiColvarBase(ao)
 {
   parse("MAXR",maxr);
+  log.printf("Integration in the interval from 0. to %f nm. \n", maxr );
   parse("NHIST",nhist);
+  log.printf("The interval is partitioned in %u equal parts and the integration is perfromed with the trapezoid rule. \n", nhist );
   parse("SIGMA",sigma);
+  log.printf("The pair distribution function is calculated with a Gaussian kernel with deviation %f nm. \n", sigma);
 
   // And setup the ActionWithVessel
   std::vector<AtomNumber> all_atoms; setupMultiColvarBase( all_atoms ); checkRead();
@@ -89,6 +122,7 @@ MultiColvarBase(ao)
   double sqrt2piSigma = std::sqrt(2*pi)*sigma;
   invSqrt2piSigma = 1./sqrt2piSigma;
   sigmaSqr2 = 2.*sigma*sigma;
+  sigmaSqr = sigma*sigma;
   deltar=maxr/nhist;
   deltaBin = std::floor(3*sigma/deltar); //3*sigma is 99.7 %
 
@@ -99,14 +133,20 @@ MultiColvarBase(ao)
 }
 
 double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) const {
-   // Calculate the coordination number
    double dfunc, d2;
-   // Construct g(r)
+   Vector value;
    vector<double> gofr(nhist);
+   vector<double> logGofr(nhist);
+   Matrix<Vector> gofrPrime(nhist,getNumberOfAtoms());
+   vector<Vector> deriv(getNumberOfAtoms());
+   vector<Tensor> gofrVirial(nhist);
+   Tensor virial;
+   // Construct g(r)
    for(unsigned i=1;i<myatoms.getNumberOfAtoms();++i){
-      Vector& distance=myatoms.getPosition(i);  
+      Vector distance=myatoms.getPosition(i);  
       if ( (d2=distance[0]*distance[0])<rcut2 && (d2+=distance[1]*distance[1])<rcut2 && (d2+=distance[2]*distance[2])<rcut2) {
            double distanceModulo=std::sqrt(d2);
+           Vector distance_versor = distance / distanceModulo;
            unsigned bin=std::floor(distanceModulo/deltar);
            int minBin, maxBin;
            // Only consider contributions to g(r) of atoms less than n*sigma bins apart from the actual distance
@@ -115,10 +155,14 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
            if (minBin > (nhist-1)) minBin=nhist-1;
            maxBin=bin +  deltaBin;
            if (maxBin > (nhist-1)) maxBin=nhist-1;
-           for(unsigned int j=minBin;j<maxBin+1;j+=1) {   
+           for(int j=minBin;j<maxBin+1;j+=1) {   
              double x=deltar*(j+0.5);
              gofr[j] += kernel(x-distanceModulo, dfunc);
-             //log.printf("Distance x gofr maxBin minBin %f %f %f %u %u \n ", distanceModulo, x, kernel(x-distanceModulo, dfunc), maxBin, minBin);
+             value = dfunc * distance_versor;
+             gofrPrime[j][0] += value;
+             gofrPrime[j][i] -= value;
+             Tensor vv(value, distance);
+             gofrVirial[j] += vv;
 	   } 
       }
    }
@@ -127,32 +171,69 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
    double density=getNumberOfAtoms()/volume;
    for(unsigned i=0;i<nhist;++i){
      double x=deltar*(i+0.5);
-     gofr[i] /= 4*pi*density*x*x;
-     //log.printf("x gofr %f %f \n ", x, gofr[i]);
+     double normConstant = 4*pi*density*x*x;
+     gofr[i] /= normConstant;
+     gofrVirial[i] /= normConstant;
+     for(unsigned j=0;j<myatoms.getNumberOfAtoms();++j){
+       gofrPrime[i][j] /= normConstant;
+     }
    }
    // Construct integrand
-   vector<double> integrand(gofr.size());
-   for(unsigned i=0;i<gofr.size();++i){
+   vector<double> integrand(nhist);
+   for(unsigned i=0;i<nhist;++i){
      double x=deltar*(i+0.5);
+     logGofr[i] = std::log(gofr[i]);
      if (gofr[i]<1.e-10) {
-       //integrand[i] = 0.;
        integrand[i] = x*x;
      } else {
-       //integrand[i] = (gofr[i])*x*x;
-       //integrand[i] = (gofr[i]*std::log(gofr[i]))*x*x;
-       integrand[i] = (gofr[i]*std::log(gofr[i])-gofr[i]+1)*x*x;
+       integrand[i] = (gofr[i]*logGofr[i]-gofr[i]+1)*x*x;
      }
-     //log.printf("x integrand %f %f \n ", x, integrand[i]);
    }
    // Integrate to obtain pair entropy;
    double entropy = -2*pi*density*integrate(integrand,deltar); 
+   // Construct integrand and integrate derivatives
+   for(unsigned i=0;i<myatoms.getNumberOfAtoms();++i) {
+     vector<Vector> integrandDerivatives(nhist);
+     for(unsigned j=0;j<nhist;++j){
+       double x=deltar*(j+0.5);
+       if (gofr[j]>1.e-10) {
+         integrandDerivatives[j] = gofrPrime[j][i]*logGofr[j]*x*x;
+       }
+     }
+     // Integrate
+     deriv[i] = -2*pi*density*integrate(integrandDerivatives,deltar);
+   }
+   // Virial of positions
+   // Construct virial integrand
+   vector<Tensor> integrandVirial(nhist);
+   for(unsigned i=0;i<nhist;++i){
+     double x=deltar*(i+0.5);
+     if (gofr[i]>1.e-10) {
+       integrandVirial[i] = gofrVirial[i]*logGofr[i]*x*x;
+     }
+   }
+   // Integrate virial
+   virial = -2*pi*density*integrate(integrandVirial,deltar);
+   // Virial of volume
+   // Construct virial integrand
+   vector<double> integrandVirialVolume(nhist);
+   for(unsigned i=0;i<nhist;i+=1) {   
+     double x=deltar*(i+0.5);
+     integrandVirialVolume[i] = (-gofr[i]+1)*x*x;
+   }
+   // Integrate virial
+   virial += -2*pi*density*integrate(integrandVirialVolume,deltar)*Tensor::identity();
+   // Assign derivatives
+   for(unsigned i=0;i<myatoms.getNumberOfAtoms();++i) addAtomDerivatives( 1, i, deriv[i], myatoms );
+   // Assign virial
+   myatoms.addBoxDerivatives( 1, virial );
    return entropy;
 }
 
-double PairEntropy::kernel(double distance,double&dfunc)const{
+double PairEntropy::kernel(double distance,double&der)const{
   // Gaussian function and derivative
   double result = invSqrt2piSigma*std::exp(-distance*distance/sigmaSqr2) ;
-  dfunc = 0.;
+  der = -distance*result/sigmaSqr;
   return result;
 }
 
@@ -163,7 +244,31 @@ double PairEntropy::integrate(vector<double> integrand, double delta)const{
     result += integrand[i];
   }
   result += 0.5*integrand[0];
-  result += 0.5*integrand[integrand.size()];
+  result += 0.5*integrand[integrand.size()-1];
+  result *= delta;
+  return result;
+}
+
+Vector PairEntropy::integrate(vector<Vector> integrand, double delta)const{
+  // Trapezoid rule
+  Vector result;
+  for(unsigned i=1;i<(integrand.size()-1);++i){
+      result += integrand[i];
+  }
+  result += 0.5*integrand[0];
+  result += 0.5*integrand[integrand.size()-1];
+  result *= delta;
+  return result;
+}
+
+Tensor PairEntropy::integrate(vector<Tensor> integrand, double delta)const{
+  // Trapezoid rule
+  Tensor result;
+  for(unsigned i=1;i<(integrand.size()-1);++i){
+      result += integrand[i];
+  }
+  result += 0.5*integrand[0];
+  result += 0.5*integrand[integrand.size()-1];
   result *= delta;
   return result;
 }
