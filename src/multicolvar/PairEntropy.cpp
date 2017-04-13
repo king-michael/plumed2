@@ -35,7 +35,7 @@ namespace multicolvar{
 
 //+PLUMEDOC MCOLVAR PAIRENTROPY
 /*
-Calculate the pair entropy of atom i using the function:
+Calculate the pair entropy of atom i using the expression:
 
 \f[
 s_i=-2\pi\rho k_B \int\limits_0^{r_{\mathrm{max}}} \left [ g(r) \ln g(r) - g(r) + 1 \right ] r^2 dr .
@@ -143,7 +143,7 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
    Tensor virial;
    // Construct g(r)
    for(unsigned i=1;i<myatoms.getNumberOfAtoms();++i){
-      Vector distance=myatoms.getPosition(i);  
+      Vector& distance=myatoms.getPosition(i);  
       if ( (d2=distance[0]*distance[0])<rcut2 && (d2+=distance[1]*distance[1])<rcut2 && (d2+=distance[2]*distance[2])<rcut2) {
            double distanceModulo=std::sqrt(d2);
            Vector distance_versor = distance / distanceModulo;
