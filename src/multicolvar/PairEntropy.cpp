@@ -72,7 +72,8 @@ class PairEntropy : public MultiColvarBase {
 private:
   double rcut2;
   double invSqrt2piSigma, sigmaSqr2, sigmaSqr;
-  double maxr, nhist,sigma;
+  double maxr, sigma;
+  unsigned nhist;
   double deltar;
   unsigned deltaBin;
   // Integration routine
@@ -158,11 +159,13 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
            for(int j=minBin;j<maxBin+1;j+=1) {   
              double x=deltar*(j+0.5);
              gofr[j] += kernel(x-distanceModulo, dfunc);
-             value = dfunc * distance_versor;
-             gofrPrime[j][0] += value;
-             gofrPrime[j][i] -= value;
-             Tensor vv(value, distance);
-             gofrVirial[j] += vv;
+             if (!doNotCalculateDerivatives()) {
+               value = dfunc * distance_versor;
+               gofrPrime[j][0] += value;
+               gofrPrime[j][i] -= value;
+               Tensor vv(value, distance);
+               gofrVirial[j] += vv;
+             }
 	   } 
       }
    }
@@ -173,9 +176,11 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
      double x=deltar*(i+0.5);
      double normConstant = 4*pi*density*x*x;
      gofr[i] /= normConstant;
-     gofrVirial[i] /= normConstant;
-     for(unsigned j=0;j<myatoms.getNumberOfAtoms();++j){
-       gofrPrime[i][j] /= normConstant;
+     if (!doNotCalculateDerivatives()) {
+       gofrVirial[i] /= normConstant;
+       for(unsigned j=0;j<myatoms.getNumberOfAtoms();++j){
+         gofrPrime[i][j] /= normConstant;
+       }
      }
    }
    // Construct integrand
@@ -191,38 +196,40 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
    }
    // Integrate to obtain pair entropy;
    double entropy = -2*pi*density*integrate(integrand,deltar); 
-   // Construct integrand and integrate derivatives
-   for(unsigned i=0;i<myatoms.getNumberOfAtoms();++i) {
-     vector<Vector> integrandDerivatives(nhist);
-     for(unsigned j=0;j<nhist;++j){
-       double x=deltar*(j+0.5);
-       if (gofr[j]>1.e-10) {
-         integrandDerivatives[j] = gofrPrime[j][i]*logGofr[j]*x*x;
+   if (!doNotCalculateDerivatives()) {
+     // Construct integrand and integrate derivatives
+     for(unsigned i=0;i<myatoms.getNumberOfAtoms();++i) {
+       vector<Vector> integrandDerivatives(nhist);
+       for(unsigned j=0;j<nhist;++j){
+         double x=deltar*(j+0.5);
+         if (gofr[j]>1.e-10) {
+           integrandDerivatives[j] = gofrPrime[j][i]*logGofr[j]*x*x;
+         }
+       }
+       // Integrate
+       deriv[i] = -2*pi*density*integrate(integrandDerivatives,deltar);
+     }
+     // Virial of positions
+     // Construct virial integrand
+     vector<Tensor> integrandVirial(nhist);
+     for(unsigned i=0;i<nhist;++i){
+       double x=deltar*(i+0.5);
+       if (gofr[i]>1.e-10) {
+         integrandVirial[i] = gofrVirial[i]*logGofr[i]*x*x;
        }
      }
-     // Integrate
-     deriv[i] = -2*pi*density*integrate(integrandDerivatives,deltar);
-   }
-   // Virial of positions
-   // Construct virial integrand
-   vector<Tensor> integrandVirial(nhist);
-   for(unsigned i=0;i<nhist;++i){
-     double x=deltar*(i+0.5);
-     if (gofr[i]>1.e-10) {
-       integrandVirial[i] = gofrVirial[i]*logGofr[i]*x*x;
+     // Integrate virial
+     virial = -2*pi*density*integrate(integrandVirial,deltar);
+     // Virial of volume
+     // Construct virial integrand
+     vector<double> integrandVirialVolume(nhist);
+     for(unsigned i=0;i<nhist;i+=1) {   
+       double x=deltar*(i+0.5);
+       integrandVirialVolume[i] = (-gofr[i]+1)*x*x;
      }
+     // Integrate virial
+     virial += -2*pi*density*integrate(integrandVirialVolume,deltar)*Tensor::identity();
    }
-   // Integrate virial
-   virial = -2*pi*density*integrate(integrandVirial,deltar);
-   // Virial of volume
-   // Construct virial integrand
-   vector<double> integrandVirialVolume(nhist);
-   for(unsigned i=0;i<nhist;i+=1) {   
-     double x=deltar*(i+0.5);
-     integrandVirialVolume[i] = (-gofr[i]+1)*x*x;
-   }
-   // Integrate virial
-   virial += -2*pi*density*integrate(integrandVirialVolume,deltar)*Tensor::identity();
    // Assign derivatives
    for(unsigned i=0;i<myatoms.getNumberOfAtoms();++i) addAtomDerivatives( 1, i, deriv[i], myatoms );
    // Assign virial
