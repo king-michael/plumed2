@@ -164,7 +164,7 @@ double PairEntropy::integrate(vector<double> integrand, double delta)const{
     result += integrand[i];
   }
   result += 0.5*integrand[0];
-  result += 0.5*integrand[integrand.size()];
+  result += 0.5*integrand[integrand.size()-1];
   result *= delta;
   return result;
 }
