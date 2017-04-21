@@ -52,7 +52,7 @@ where \f$ \rho $\f is the density and \f$ sigma $\f is a broadening parameter (S
 \par Example)
 
 The following input tells plumed to calculate the per atom per entropy of atoms 1-250 with themselves.
-The mean pair entropy is the calculated.
+The mean pair entropy is then calculated.
 \verbatim
 PAIRENTROPY ...
  LABEL=s2
@@ -103,6 +103,7 @@ void PairEntropy::registerKeywords( Keywords& keys ){
   keys.use("MEAN"); keys.use("MORE_THAN"); keys.use("LESS_THAN"); keys.use("MAX");
   keys.use("MIN"); keys.use("BETWEEN"); keys.use("HISTOGRAM"); keys.use("MOMENTS");
   keys.use("ALT_MIN"); keys.use("LOWEST"); keys.use("HIGHEST"); 
+  keys.add("optional","INTEGRAND_FILE","the file on which to write the integrand");
 }
 
 PairEntropy::PairEntropy(const ActionOptions&ao):
