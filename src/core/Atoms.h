@@ -185,6 +185,7 @@ public:
   void setEnergiesAtom(void*);
   void setCharges(void*);
   bool chargesWereSet() const ;
+  bool energiesAtomWereSet() const ;
   bool boxWasSet() const ;
 
   void MD2double(const void*m,double&d)const;
@@ -265,6 +266,12 @@ inline
 bool Atoms::chargesWereSet() const {
   return chargesHaveBeenSet;
 }
+
+inline
+bool Atoms::energiesAtomWereSet() const {
+  return energiesAtomHaveBeenSet;
+}
+
 
 inline
 bool Atoms::boxWasSet() const {

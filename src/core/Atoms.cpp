@@ -204,8 +204,10 @@ void Atoms::share(const std::set<AtomNumber>& unique){
     mdatoms->getMasses(gatindex,masses);
   }
   // Add one for energies per atom
-  ndata++;
-  mdatoms->getEnergiesAtom(gatindex,energiesAtom);
+  if (energiesAtomHaveBeenSet) {
+    ndata++;
+    mdatoms->getEnergiesAtom(gatindex,energiesAtom);
+  }
   if(dd && shuffledAtoms>0){
     if(dd.async){
       for(unsigned i=0;i<dd.mpi_request_positions.size();i++) dd.mpi_request_positions[i].wait();
@@ -221,9 +223,13 @@ void Atoms::share(const std::set<AtomNumber>& unique){
         if(!massAndChargeOK){
           dd.positionsToBeSent[ndata*count+3]=masses[p.index()];
           dd.positionsToBeSent[ndata*count+4]=charges[p.index()];
-          dd.positionsToBeSent[ndata*count+5]=energiesAtom[p.index()];
+          if (energiesAtomHaveBeenSet) {
+            dd.positionsToBeSent[ndata*count+5]=energiesAtom[p.index()];
+          }
         } else {
-          dd.positionsToBeSent[ndata*count+3]=energiesAtom[p.index()];
+          if (energiesAtomHaveBeenSet) {
+            dd.positionsToBeSent[ndata*count+3]=energiesAtom[p.index()];
+          }
         }
         count++;
       }
@@ -257,9 +263,13 @@ void Atoms::share(const std::set<AtomNumber>& unique){
         if(!massAndChargeOK){
           masses[dd.indexToBeReceived[i]]      =dd.positionsToBeReceived[ndata*i+3];
           charges[dd.indexToBeReceived[i]]     =dd.positionsToBeReceived[ndata*i+4];
-          energiesAtom[dd.indexToBeReceived[i]]  =dd.positionsToBeReceived[ndata*i+5];
+          if (energiesAtomHaveBeenSet) {
+            energiesAtom[dd.indexToBeReceived[i]]  =dd.positionsToBeReceived[ndata*i+5];
+          }
         } else {
-          energiesAtom[dd.indexToBeReceived[i]]  =dd.positionsToBeReceived[ndata*i+3];
+          if (energiesAtomHaveBeenSet) {
+            energiesAtom[dd.indexToBeReceived[i]]  =dd.positionsToBeReceived[ndata*i+3];
+          }
         }
       }
     }

@@ -221,6 +221,7 @@ void ActionAtomistic::retrieveAtoms(){
   const vector<Vector> & p(atoms.positions);
   const vector<double> & c(atoms.charges);
   const vector<double> & m(atoms.masses);
+  energiesAtomWereSet=atoms.energiesAtomWereSet();
   const vector<double> & energiesatom(atoms.energiesAtom);
   for(unsigned j=0;j<indexes.size();j++) positions[j]=p[indexes[j].index()];
   for(unsigned j=0;j<indexes.size();j++) charges[j]=c[indexes[j].index()];

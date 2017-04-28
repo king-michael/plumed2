@@ -37,14 +37,18 @@ class FixPlumed : public Fix {
   int*gatindex;
 // array of masses for local atoms:
   double*masses;
+// array of potential energy per atom for local atoms:
+  double*pe_atom;
 // array of charges for local atoms:
   double*charges;
 // this is something to enable respa
   int nlevels_respa;
 // output bias potential
   double bias;
-// Compute for the energy
-  class Compute *c_pe; 
+// Computes for the energy
+  class Compute *c_pe, *c_pe_atom; 
+// Bool to compute pe/atom
+  bool pe_atomFlag;
 };
 
 };

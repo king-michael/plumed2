@@ -47,6 +47,7 @@ class ActionAtomistic :
   Pbc&                  pbc;
   Tensor                virial;
   std::vector<double>   masses;
+  bool                  energiesAtomWereSet;
   std::vector<double>   energiesAtom;
   bool                  chargesWereSet;
   std::vector<double>   charges;
@@ -209,6 +210,7 @@ double ActionAtomistic::getMass(int i)const{
 
 inline
 double ActionAtomistic::getEnergyAtom(int i)const{
+  if( !energiesAtomWereSet ) error("energies per atom were not passed to plumed");
   return energiesAtom[i];
 }
 
