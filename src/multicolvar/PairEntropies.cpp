@@ -33,7 +33,7 @@ using namespace std;
 namespace PLMD{
 namespace multicolvar{
 
-//+PLUMEDOC MCOLVAR PAIRENTROPY
+//+PLUMEDOC MCOLVAR PAIRENTROPIES
 /*
 Calculate the pair entropy of atom i using the expression:
 
@@ -54,21 +54,21 @@ where \f$ \rho $\f is the density and \f$ sigma $\f is a broadening parameter (S
 The following input tells plumed to calculate the per atom per entropy of atoms 1-250 with themselves.
 The mean pair entropy is then calculated.
 \verbatim
-PAIRENTROPY ...
+PAIRENTROPIES ...
  LABEL=s2
  SPECIES=1-250
  MAXR=0.65
  SIGMA=0.025
  NHIST=60
  MEAN
-... PAIRENTROPY
+... PAIRENTROPIES
 \endverbatim
 
 */
 //+ENDPLUMEDOC
 
 
-class PairEntropy : public MultiColvarBase {
+class PairEntropies : public MultiColvarBase {
 private:
   double rcut2;
   double invSqrt2piSigma, sigmaSqr2, sigmaSqr;
@@ -84,16 +84,16 @@ private:
   double kernel(double distance, double&der)const;
 public:
   static void registerKeywords( Keywords& keys );
-  explicit PairEntropy(const ActionOptions&);
+  explicit PairEntropies(const ActionOptions&);
 // active methods:
   virtual double compute( const unsigned& tindex, AtomValuePack& myatoms ) const ; 
 /// Returns the number of coordinates of the field
   bool isPeriodic(){ return false; }
 };
 
-PLUMED_REGISTER_ACTION(PairEntropy,"PAIRENTROPY")
+PLUMED_REGISTER_ACTION(PairEntropies,"PAIRENTROPIES")
 
-void PairEntropy::registerKeywords( Keywords& keys ){
+void PairEntropies::registerKeywords( Keywords& keys ){
   MultiColvarBase::registerKeywords( keys );
   keys.use("SPECIES"); keys.use("SPECIESA"); keys.use("SPECIESB");
   keys.add("compulsory","MAXR","1","Maximum distance for the radial distribution function ");
@@ -106,7 +106,7 @@ void PairEntropy::registerKeywords( Keywords& keys ){
   keys.add("optional","INTEGRAND_FILE","the file on which to write the integrand");
 }
 
-PairEntropy::PairEntropy(const ActionOptions&ao):
+PairEntropies::PairEntropies(const ActionOptions&ao):
 Action(ao),
 MultiColvarBase(ao)
 {
@@ -134,7 +134,7 @@ MultiColvarBase(ao)
   log.printf("Setting cut off to %f \n ", maxr + 3*sigma );
 }
 
-double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) const {
+double PairEntropies::compute( const unsigned& tindex, AtomValuePack& myatoms ) const {
    double dfunc, d2;
    Vector value;
    vector<double> gofr(nhist);
@@ -238,14 +238,14 @@ double PairEntropy::compute( const unsigned& tindex, AtomValuePack& myatoms ) co
    return entropy;
 }
 
-double PairEntropy::kernel(double distance,double&der)const{
+double PairEntropies::kernel(double distance,double&der)const{
   // Gaussian function and derivative
   double result = invSqrt2piSigma*std::exp(-distance*distance/sigmaSqr2) ;
   der = -distance*result/sigmaSqr;
   return result;
 }
 
-double PairEntropy::integrate(vector<double> integrand, double delta)const{
+double PairEntropies::integrate(vector<double> integrand, double delta)const{
   // Trapezoid rule
   double result = 0.;
   for(unsigned i=1;i<(integrand.size()-1);++i){
@@ -257,7 +257,7 @@ double PairEntropy::integrate(vector<double> integrand, double delta)const{
   return result;
 }
 
-Vector PairEntropy::integrate(vector<Vector> integrand, double delta)const{
+Vector PairEntropies::integrate(vector<Vector> integrand, double delta)const{
   // Trapezoid rule
   Vector result;
   for(unsigned i=1;i<(integrand.size()-1);++i){
@@ -269,7 +269,7 @@ Vector PairEntropy::integrate(vector<Vector> integrand, double delta)const{
   return result;
 }
 
-Tensor PairEntropy::integrate(vector<Tensor> integrand, double delta)const{
+Tensor PairEntropies::integrate(vector<Tensor> integrand, double delta)const{
   // Trapezoid rule
   Tensor result;
   for(unsigned i=1;i<(integrand.size()-1);++i){
