@@ -101,17 +101,13 @@ void Atoms::setMasses(void*p) {
 
 }
 
-<<<<<<< HEAD
 void Atoms::setEnergiesAtom(void*p){
   plumed_massert( dataCanBeSet ,"setEnergyAtom must be called after setStep in MD code interface");
   plumed_massert( p || gatindex.size()==0, "NULL energy per atom pointer with non-zero local atoms");
   mdatoms->setenergiesatom(p); energiesAtomHaveBeenSet=true;
 }
 
-void Atoms::setCharges(void*p){
-=======
 void Atoms::setCharges(void*p) {
->>>>>>> upstream/master
   plumed_massert( dataCanBeSet, "setCharges must be called after setStep in MD code interface");
   plumed_massert( p || gatindex.size()==0, "NULL charges pointer with non-zero local atoms");
   mdatoms->setc(p); chargesHaveBeenSet=true;
@@ -207,7 +203,6 @@ void Atoms::share(const std::set<AtomNumber>& unique) {
     mdatoms->getCharges(gatindex,charges);
     mdatoms->getMasses(gatindex,masses);
   }
-<<<<<<< HEAD
   // Add one for energies per atom
   if (energiesAtomHaveBeenSet) {
     ndata++;
@@ -217,13 +212,6 @@ void Atoms::share(const std::set<AtomNumber>& unique) {
     if(dd.async){
       for(unsigned i=0;i<dd.mpi_request_positions.size();i++) dd.mpi_request_positions[i].wait();
       for(unsigned i=0;i<dd.mpi_request_index.size();i++)     dd.mpi_request_index[i].wait();
-=======
-
-  if(dd && shuffledAtoms>0) {
-    if(dd.async) {
-      for(unsigned i=0; i<dd.mpi_request_positions.size(); i++) dd.mpi_request_positions[i].wait();
-      for(unsigned i=0; i<dd.mpi_request_index.size(); i++)     dd.mpi_request_index[i].wait();
->>>>>>> upstream/master
     }
     int count=0;
     for(const auto & p : unique) {
@@ -293,14 +281,9 @@ void Atoms::wait() {
 // How many double per atom should be scattered
   int ndata=3;
   if(!massAndChargeOK)ndata=5;
-<<<<<<< HEAD
   // Add one for energies per atom
   ndata++;
-  if(dd){
-=======
-
   if(dd) {
->>>>>>> upstream/master
     dd.Bcast(box,0);
   }
   pbc.setBox(box);

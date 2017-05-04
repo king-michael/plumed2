@@ -146,22 +146,15 @@ void MDAtomsTyped<T>::getMasses(const vector<int>&index,vector<double>&masses)co
 }
 
 template <class T>
-<<<<<<< HEAD
 void MDAtomsTyped<T>::getEnergiesAtom(const vector<int>&index,vector<double>&energiesAtom)const{
   if(energiesatom) for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=energiesatom[i]/scaleenergiesatom;
   else  for(unsigned i=0;i<index.size();++i) energiesAtom[index[i]]=0.0;
 }
 
-
 template <class T>
-void MDAtomsTyped<T>::getCharges(const vector<int>&index,vector<double>&charges)const{
-  if(c) for(unsigned i=0;i<index.size();++i) charges[index[i]]=scalec*c[i];
-  else  for(unsigned i=0;i<index.size();++i) charges[index[i]]=0.0;
-=======
 void MDAtomsTyped<T>::getCharges(const vector<int>&index,vector<double>&charges)const {
   if(c) for(unsigned i=0; i<index.size(); ++i) charges[index[i]]=scalec*c[i];
   else  for(unsigned i=0; i<index.size(); ++i) charges[index[i]]=0.0;
->>>>>>> upstream/master
 }
 
 template <class T>

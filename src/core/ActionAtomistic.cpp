@@ -221,18 +221,12 @@ void ActionAtomistic::retrieveAtoms() {
   const vector<Vector> & p(atoms.positions);
   const vector<double> & c(atoms.charges);
   const vector<double> & m(atoms.masses);
-<<<<<<< HEAD
   energiesAtomWereSet=atoms.energiesAtomWereSet();
   const vector<double> & energiesatom(atoms.energiesAtom);
   for(unsigned j=0;j<indexes.size();j++) positions[j]=p[indexes[j].index()];
   for(unsigned j=0;j<indexes.size();j++) charges[j]=c[indexes[j].index()];
   for(unsigned j=0;j<indexes.size();j++) masses[j]=m[indexes[j].index()];
   for(unsigned j=0;j<indexes.size();j++) energiesAtom[j]=energiesatom[indexes[j].index()];
-=======
-  for(unsigned j=0; j<indexes.size(); j++) positions[j]=p[indexes[j].index()];
-  for(unsigned j=0; j<indexes.size(); j++) charges[j]=c[indexes[j].index()];
-  for(unsigned j=0; j<indexes.size(); j++) masses[j]=m[indexes[j].index()];
->>>>>>> upstream/master
 }
 
 void ActionAtomistic::setForcesOnAtoms( const std::vector<double>& forcesToApply, unsigned ind ) {
