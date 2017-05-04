@@ -251,8 +251,8 @@ void MDAtomsTyped<T>::setc(void*c) {
 }
 
 template <class T>
-void MDAtomsTyped<T>::setenergiesatom(void*energiesatom){
-  this->energiesatom=static_cast<T*>(energiesatom);
+void MDAtomsTyped<T>::setenergiesatom(void*energiesAtom){
+  this->energiesatom=static_cast<T*>(energiesAtom);
 }
 
 template <class T>

@@ -282,7 +282,7 @@ void Atoms::wait() {
   int ndata=3;
   if(!massAndChargeOK)ndata=5;
   // Add one for energies per atom
-  ndata++;
+  if (energiesAtomHaveBeenSet) ndata++;
   if(dd) {
     dd.Bcast(box,0);
   }
@@ -308,9 +308,13 @@ void Atoms::wait() {
         if(!massAndChargeOK) {
           masses[dd.indexToBeReceived[i]]      =dd.positionsToBeReceived[ndata*i+3];
           charges[dd.indexToBeReceived[i]]     =dd.positionsToBeReceived[ndata*i+4];
-          energiesAtom[dd.indexToBeReceived[i]]=dd.positionsToBeReceived[ndata*i+5];
+          if (energiesAtomHaveBeenSet) {
+            energiesAtom[dd.indexToBeReceived[i]]=dd.positionsToBeReceived[ndata*i+5];
+          }
         } else {
-          energiesAtom[dd.indexToBeReceived[i]]=dd.positionsToBeReceived[ndata*i+3];
+          if (energiesAtomHaveBeenSet) {
+            energiesAtom[dd.indexToBeReceived[i]]=dd.positionsToBeReceived[ndata*i+3];
+          }
         }
       }
       asyncSent=false;
@@ -373,8 +377,13 @@ void Atoms::setAtomsNlocal(int n) {
 // we make sure they are non-zero-sized so as to
 // avoid errors when doing boundary check
     if(n==0) n++;
-    dd.positionsToBeSent.resize(n*6,0.0);
-    dd.positionsToBeReceived.resize(natoms*6,0.0);
+    if (energiesAtomHaveBeenSet) {
+      dd.positionsToBeSent.resize(n*6,0.0);
+      dd.positionsToBeReceived.resize(natoms*6,0.0);
+    } else {
+      dd.positionsToBeSent.resize(n*5,0.0);
+      dd.positionsToBeReceived.resize(natoms*5,0.0);
+    }
     dd.indexToBeSent.resize(n,0);
     dd.indexToBeReceived.resize(natoms,0);
   };
