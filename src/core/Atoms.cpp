@@ -377,13 +377,8 @@ void Atoms::setAtomsNlocal(int n) {
 // we make sure they are non-zero-sized so as to
 // avoid errors when doing boundary check
     if(n==0) n++;
-    if (energiesAtomHaveBeenSet) {
-      dd.positionsToBeSent.resize(n*6,0.0);
-      dd.positionsToBeReceived.resize(natoms*6,0.0);
-    } else {
-      dd.positionsToBeSent.resize(n*5,0.0);
-      dd.positionsToBeReceived.resize(natoms*5,0.0);
-    }
+    dd.positionsToBeSent.resize(n*6,0.0);
+    dd.positionsToBeReceived.resize(natoms*6,0.0);
     dd.indexToBeSent.resize(n,0);
     dd.indexToBeReceived.resize(natoms,0);
   };
