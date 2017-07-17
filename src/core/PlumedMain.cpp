@@ -131,193 +131,197 @@ void PlumedMain::cmd(const std::string & word,void*val) {
     const auto it=plumedMainWordMap().find(words[0]);
     if(it!=plumedMainWordMap().end()) iword=it->second;
     switch(iword) {
-    case cmd_setBox:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.setBox(val);
-      break;
-    case cmd_setPositions:
-      CHECK_INIT(initialized,word);
-      atoms.setPositions(val);
-      break;
-    case cmd_setMasses:
-      CHECK_INIT(initialized,word);
-      atoms.setMasses(val);
-      break;
-    case cmd_setCharges:
-      CHECK_INIT(initialized,word);
-      atoms.setCharges(val);
-      break;
-    case cmd_setPositionsX:
-      CHECK_INIT(initialized,word);
-      atoms.setPositions(val,0);
-      break;
-    case cmd_setPositionsY:
-      CHECK_INIT(initialized,word);
-      atoms.setPositions(val,1);
-      break;
-    case cmd_setPositionsZ:
-      CHECK_INIT(initialized,word);
-      atoms.setPositions(val,2);
-      break;
-    case cmd_setVirial:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.setVirial(val);
-      break;
-    case cmd_setEnergy:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.setEnergy(val);
-      break;
-    case cmd_setForces:
-      CHECK_INIT(initialized,word);
-      atoms.setForces(val);
-      break;
-    case cmd_setForcesX:
-      CHECK_INIT(initialized,word);
-      atoms.setForces(val,0);
-      break;
-    case cmd_setForcesY:
-      CHECK_INIT(initialized,word);
-      atoms.setForces(val,1);
-      break;
-    case cmd_setForcesZ:
-      CHECK_INIT(initialized,word);
-      atoms.setForces(val,2);
-      break;
-    case cmd_calc:
-      CHECK_INIT(initialized,word);
-      calc();
-      break;
-    case cmd_prepareDependencies:
-      CHECK_INIT(initialized,word);
-      prepareDependencies();
-      break;
-    case cmd_shareData:
-      CHECK_INIT(initialized,word);
-      shareData();
-      break;
-    case cmd_prepareCalc:
-      CHECK_INIT(initialized,word);
-      prepareCalc();
-      break;
-    case cmd_performCalc:
-      CHECK_INIT(initialized,word);
-      performCalc();
-      break;
-    case cmd_performCalcNoUpdate:
-      CHECK_INIT(initialized,word);
-      performCalcNoUpdate();
-      break;
-    case cmd_update:
-      CHECK_INIT(initialized,word);
-      update();
-      break;
-    case cmd_setStep:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      step=(*static_cast<int*>(val));
-      atoms.startStep();
-      break;
-    case cmd_setStepLong:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      step=(*static_cast<long int*>(val));
-      atoms.startStep();
-      break;
-    // words used less frequently:
-    case cmd_setAtomsNlocal:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.setAtomsNlocal(*static_cast<int*>(val));
-      break;
-    case cmd_setAtomsGatindex:
-      CHECK_INIT(initialized,word);
-      atoms.setAtomsGatindex(static_cast<int*>(val),false);
-      break;
-    case cmd_setAtomsFGatindex:
-      CHECK_INIT(initialized,word);
-      atoms.setAtomsGatindex(static_cast<int*>(val),true);
-      break;
-    case cmd_setAtomsContiguous:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.setAtomsContiguous(*static_cast<int*>(val));
-      break;
-    case cmd_createFullList:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.createFullList(static_cast<int*>(val));
-      break;
-    case cmd_getFullList:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.getFullList(static_cast<int**>(val));
-      break;
-    case cmd_clearFullList:
-      CHECK_INIT(initialized,word);
-      atoms.clearFullList();
-      break;
-    case cmd_read:
-      CHECK_INIT(initialized,word);
-      if(val)readInputFile(static_cast<char*>(val));
-      else   readInputFile("plumed.dat");
-      break;
-    case cmd_readInputLine:
-      CHECK_INIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      readInputLine(static_cast<char*>(val));
-      break;
-    case cmd_clear:
-      CHECK_INIT(initialized,word);
-      actionSet.clearDelete();
-      break;
-    case cmd_getApiVersion:
-      CHECK_NOTNULL(val,word);
-      *(static_cast<int*>(val))=4;
-      break;
-    // commands which can be used only before initialization:
-    case cmd_init:
-      CHECK_NOTINIT(initialized,word);
-      init();
-      break;
-    case cmd_setRealPrecision:
-      CHECK_NOTINIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.setRealPrecision(*static_cast<int*>(val));
-      break;
-    case cmd_setMDLengthUnits:
-      CHECK_NOTINIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.MD2double(val,d);
-      atoms.setMDLengthUnits(d);
-      break;
-    case cmd_setMDChargeUnits:
-      CHECK_NOTINIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.MD2double(val,d);
-      atoms.setMDChargeUnits(d);
-      break;
-    case cmd_setMDMassUnits:
-      CHECK_NOTINIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.MD2double(val,d);
-      atoms.setMDMassUnits(d);
-      break;
-    case cmd_setMDEnergyUnits:
-      CHECK_NOTINIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.MD2double(val,d);
-      atoms.setMDEnergyUnits(d);
-      break;
-    case cmd_setMDTimeUnits:
-      CHECK_NOTINIT(initialized,word);
-      CHECK_NOTNULL(val,word);
-      atoms.MD2double(val,d);
-      atoms.setMDTimeUnits(d);
-      break;
-    case cmd_setNaturalUnits:
+      case cmd_setBox:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.setBox(val);
+        break;
+      case cmd_setPositions:
+        CHECK_INIT(initialized,word);
+        atoms.setPositions(val);
+        break;
+      case cmd_setMasses:
+        CHECK_INIT(initialized,word);
+        atoms.setMasses(val);
+        break;
+      case cmd_setCharges:
+        CHECK_INIT(initialized,word);
+        atoms.setCharges(val);
+        break;
+      case cmd_setEnergiesAtom:
+        CHECK_INIT(initialized,word);
+        atoms.setEnergiesAtom(val);
+        break;
+      case cmd_setPositionsX:
+        CHECK_INIT(initialized,word);
+        atoms.setPositions(val,0);
+        break;
+      case cmd_setPositionsY:
+        CHECK_INIT(initialized,word);
+        atoms.setPositions(val,1);
+        break;
+      case cmd_setPositionsZ:
+        CHECK_INIT(initialized,word);
+        atoms.setPositions(val,2);
+        break;
+      case cmd_setVirial:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.setVirial(val);
+        break;
+      case cmd_setEnergy:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.setEnergy(val);
+        break;
+      case cmd_setForces:
+        CHECK_INIT(initialized,word);
+        atoms.setForces(val);
+        break;
+      case cmd_setForcesX:
+        CHECK_INIT(initialized,word);
+        atoms.setForces(val,0);
+        break;
+      case cmd_setForcesY:
+        CHECK_INIT(initialized,word);
+        atoms.setForces(val,1);
+        break;
+      case cmd_setForcesZ:
+        CHECK_INIT(initialized,word);
+        atoms.setForces(val,2);
+        break;
+      case cmd_calc:
+        CHECK_INIT(initialized,word);
+        calc();
+        break;
+      case cmd_prepareDependencies:
+        CHECK_INIT(initialized,word);
+        prepareDependencies();
+        break;
+      case cmd_shareData:
+        CHECK_INIT(initialized,word);
+        shareData();
+        break;
+      case cmd_prepareCalc:
+        CHECK_INIT(initialized,word);
+        prepareCalc();
+        break;
+      case cmd_performCalc:
+        CHECK_INIT(initialized,word);
+        performCalc();
+        break;
+      case cmd_performCalcNoUpdate:
+        CHECK_INIT(initialized,word);
+        performCalcNoUpdate();
+        break;
+      case cmd_update:
+        CHECK_INIT(initialized,word);
+        update();
+        break;
+      case cmd_setStep:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        step=(*static_cast<int*>(val));
+        atoms.startStep();
+        break;
+      case cmd_setStepLong:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        step=(*static_cast<long int*>(val));
+        atoms.startStep();
+        break;
+      // words used less frequently:
+      case cmd_setAtomsNlocal:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.setAtomsNlocal(*static_cast<int*>(val));
+        break;
+      case cmd_setAtomsGatindex:
+        CHECK_INIT(initialized,word);
+        atoms.setAtomsGatindex(static_cast<int*>(val),false);
+        break;
+      case cmd_setAtomsFGatindex:
+        CHECK_INIT(initialized,word);
+        atoms.setAtomsGatindex(static_cast<int*>(val),true);
+        break;
+      case cmd_setAtomsContiguous:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.setAtomsContiguous(*static_cast<int*>(val));
+        break;
+      case cmd_createFullList:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.createFullList(static_cast<int*>(val));
+        break;
+      case cmd_getFullList:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.getFullList(static_cast<int**>(val));
+        break;
+      case cmd_clearFullList:
+        CHECK_INIT(initialized,word);
+        atoms.clearFullList();
+        break;
+      case cmd_read:
+        CHECK_INIT(initialized,word);
+        if(val)readInputFile(static_cast<char*>(val));
+        else   readInputFile("plumed.dat");
+        break;
+      case cmd_readInputLine:
+        CHECK_INIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        readInputLine(static_cast<char*>(val));
+        break;
+      case cmd_clear:
+        CHECK_INIT(initialized,word);
+        actionSet.clearDelete();
+        break;
+      case cmd_getApiVersion:
+        CHECK_NOTNULL(val,word);
+        *(static_cast<int*>(val))=4;
+        break;
+      // commands which can be used only before initialization:
+      case cmd_init:
+        CHECK_NOTINIT(initialized,word);
+        init();
+        break;
+      case cmd_setRealPrecision:
+        CHECK_NOTINIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.setRealPrecision(*static_cast<int*>(val));
+        break;
+      case cmd_setMDLengthUnits:
+        CHECK_NOTINIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.MD2double(val,d);
+        atoms.setMDLengthUnits(d);
+        break;
+      case cmd_setMDChargeUnits:
+        CHECK_NOTINIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.MD2double(val,d);
+        atoms.setMDChargeUnits(d);
+        break;
+      case cmd_setMDMassUnits:
+        CHECK_NOTINIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.MD2double(val,d);
+        atoms.setMDMassUnits(d);
+        break;
+      case cmd_setMDEnergyUnits:
+        CHECK_NOTINIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.MD2double(val,d);
+        atoms.setMDEnergyUnits(d);
+        break;
+      case cmd_setMDTimeUnits:
+        CHECK_NOTINIT(initialized,word);
+        CHECK_NOTNULL(val,word);
+        atoms.MD2double(val,d);
+        atoms.setMDTimeUnits(d);
+        break;
+      case cmd_setNaturalUnits:
       // set the boltzman constant for MD in natural units (kb=1)
       // only needed in LJ codes if the MD is passing temperatures to plumed (so, not yet...)
       // use as cmd("setNaturalUnits")

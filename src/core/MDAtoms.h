@@ -58,6 +58,8 @@ public:
   virtual unsigned getRealPrecision()const=0;
 /// Set a pointer to the mass array in the MD code
   virtual void setm(void*m)=0;
+/// Set a pointer to the energy per atom array in the MD code
+  virtual void setenergiesatom(void*m)=0;
 /// Set a pointer to the charge array in the MD code
   virtual void setc(void*m)=0;
 /// Set a pointer to the box array (3x3) in the MD code
@@ -92,6 +94,9 @@ public:
 /// Retrieve selected masses.
 /// The operation is done in such a way that m[index[i]] is equal to the mass of atom i
   virtual void getMasses(const std::vector<int>&index,std::vector<double>&m)const=0;
+/// Retrieve selected energies per atom.
+/// The operation is done in such a way that m[index[i]] is equal to the mass of atom i
+  virtual void getEnergiesAtom(const std::vector<int>&index,std::vector<double>&energiesAtom)const=0;
 /// Retrieve selected charges.
 /// The operation is done in such a way that c[index[i]] is equal to the charge of atom i
   virtual void getCharges(const std::vector<int>&index,std::vector<double>&c)const=0;

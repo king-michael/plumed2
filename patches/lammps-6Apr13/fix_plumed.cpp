@@ -19,6 +19,7 @@ using namespace PLMD;
 using namespace FixConst;
 
 #define INVOKED_SCALAR 1
+#define INVOKED_PERATOM 8
 
 FixPlumed::FixPlumed(LAMMPS *lmp, int narg, char **arg) :
   Fix(lmp, narg, arg),
@@ -26,7 +27,9 @@ FixPlumed::FixPlumed(LAMMPS *lmp, int narg, char **arg) :
   nlocal(0),
   gatindex(NULL),
   masses(NULL),
-  charges(NULL)
+  pe_atom(NULL),
+  charges(NULL),
+  pe_atomFlag(false)
 {
 // Not sure this is really necessary:
   if (!atom->tag_enable) error->all(FLERR,"fix plumed requires atom tags");
@@ -121,7 +124,8 @@ FixPlumed::FixPlumed(LAMMPS *lmp, int narg, char **arg) :
       p->cmd("setPlumedDat",arg[i]);
       next=0;
     }
-    else error->all(FLERR,"syntax error in fix plumed - use 'fix name plumed plumedfile plumed.dat outfile plumed.out' ");
+    else if(!strcmp(arg[i],"pe/atom")) pe_atomFlag=true;
+    else error->all(FLERR,"syntax error in fix plumed - use 'fix name plumed plumedfile plumed.dat outfile plumed.out pe/atom' ");
   }
   if(next==1) error->all(FLERR,"missing argument for outfile option");
   if(next==2) error->all(FLERR,"missing argument for plumedfile option");
@@ -146,6 +150,18 @@ FixPlumed::FixPlumed(LAMMPS *lmp, int narg, char **arg) :
   c_pe = modify->compute[ipe];
   // Trigger computation of potential energy every step
   c_pe->addstep(update->ntimestep+1);
+
+// Define compute to calculate potential energy per atom
+  if (pe_atomFlag) {
+    char **newarg = new char*[3];
+    newarg[0] = (char *) "c_per_atom";
+    newarg[1] = (char *) "all";
+    newarg[2] = (char *) "pe/atom";
+    modify->add_compute(3,newarg);
+    int ipea = modify->find_compute(newarg[0]);
+    c_pe_atom = modify->compute[ipea];
+    c_pe_atom->addstep(update->ntimestep+1);
+  }
 }
 
 FixPlumed::~FixPlumed()
@@ -193,10 +209,12 @@ void FixPlumed::post_force(int vflag)
   if(nlocal!=atom->nlocal){
     if(charges) delete [] charges;
     if(masses) delete [] masses;
+    if(pe_atom) delete [] pe_atom;
     if(gatindex) delete [] gatindex;
     nlocal=atom->nlocal;
     gatindex=new int [nlocal];
     masses=new double [nlocal];
+    pe_atom=new double [nlocal];
     charges=new double [nlocal];
     update_gatindex=1;
   } else {
@@ -260,6 +278,18 @@ void FixPlumed::post_force(int vflag)
   p->cmd("setEnergy",&pot_energy);
   // Trigger computation of potential energy every step
   c_pe->addstep(update->ntimestep+1);
+
+// pass the energy per atom
+  if (pe_atomFlag) {
+    c_pe_atom->compute_peratom();
+    c_pe_atom->invoked_flag |= INVOKED_PERATOM;
+    double *compute_vector = c_pe_atom->vector_atom;
+    for (int i=0;i<nlocal;i++){
+      pe_atom[i]=compute_vector[i];
+    }
+    p->cmd("setEnergiesAtom",&pe_atom[0]);
+    c_pe_atom->addstep(update->ntimestep+1);
+  }
 
 // do the real calculation:
   p->cmd("calc");

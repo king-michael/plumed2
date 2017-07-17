@@ -50,6 +50,8 @@ class ActionAtomistic :
   Pbc&                  pbc;
   Tensor                virial;
   std::vector<double>   masses;
+  bool                  energiesAtomWereSet;
+  std::vector<double>   energiesAtom;
   bool                  chargesWereSet;
   std::vector<double>   charges;
 
@@ -103,6 +105,8 @@ public:
   const std::vector<Vector> & getPositions()const;
 /// Get energy
   const double & getEnergy()const;
+/// Get energy of i-th atom
+  double getEnergyAtom(int i)const;
 /// Get mass of i-th atom
   double getMass(int i)const;
 /// Get charge of i-th atom
@@ -208,6 +212,12 @@ Tensor & ActionAtomistic::modifyGlobalVirial() {
 inline
 double ActionAtomistic::getMass(int i)const {
   return masses[i];
+}
+
+inline
+double ActionAtomistic::getEnergyAtom(int i)const{
+  if( !energiesAtomWereSet ) error("energies per atom were not passed to plumed");
+  return energiesAtom[i];
 }
 
 inline
